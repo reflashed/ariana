@@ -1,7 +1,11 @@
-docker run --mount type=bind,source="$(pwd)"/gcloud-key.json,target=/gcloud-key.json --env GOOGLE_APPLICATION_CREDENTIALS=/gcloud-key.json test
+# Ariana
 
-Make dat fire music: [https://soundcloud.com/david-westfall-990111986](https://soundcloud.com/david-westfall-990111986)
+Love Ariana grande? Wish 7 rings was longer? You're in luck! You can now create your own version of the hit single '7 rings'.
 
-- First run data/gen-verbs.py to generate data/verbs.csv
-- Add gcloud-key.json to the top level to access the Google TTS API
-- Next run run.sh to generate a song
+Example: [https://soundcloud.com/david-westfall-990111986](https://soundcloud.com/david-westfall-990111986)
+
+# Getting Started
+
+All you need to get up and running is a valid gcloud key that has access to the gcloud text-to-speech API. Supply this as environmental variable to the [Docker container](https://hub.docker.com/repository/docker/davidw93/ariana), and you're ready to make some music!
+
+`docker run --mount type=bind,source="$(pwd)"/gcloud-key.json,target=/gcloud-key.json --env GOOGLE_APPLICATION_CREDENTIALS=/gcloud-key.json davidw93/ariana`
