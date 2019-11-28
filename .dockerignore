@@ -1,4 +1,3 @@
 *.swp
-gcloud-key.json
 data/verbs.csv
 out/*

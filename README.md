@@ -1,3 +1,5 @@
+docker run --mount type=bind,source="$(pwd)"/gcloud-key.json,target=/gcloud-key.json --env GOOGLE_APPLICATION_CREDENTIALS=/gcloud-key.json test
+
 Make dat fire music: [https://soundcloud.com/david-westfall-990111986](https://soundcloud.com/david-westfall-990111986)
 
 - First run data/gen-verbs.py to generate data/verbs.csv

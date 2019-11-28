@@ -1,12 +1,14 @@
+import os
 import csv
 import random
-import textstat
-import pyttsx3
 
+import textstat
 from google.cloud import texttospeech
 from pydub import AudioSegment
 
-engine = pyttsx3.init()
+def make_output_dirs():
+    if not os.path.isdir('out'):
+        os.mkdir('out')
 
 def load_verbs():
     verbs = []
@@ -37,26 +39,36 @@ def gen_tuples(num_tuples):
 
     return tuples
 
-subjects = ['I', 'You']
-verb_tuples = gen_tuples(50)
+def gen_lyrics_text():
+    subjects = ['I', 'You']
+    verb_tuples = gen_tuples(50)
 
-song = ''
+    song = ''
 
-for i, verb_tuple in enumerate(verb_tuples):
-    subject_1 = random.choice(subjects)
-    subject_2 = random.choice(subjects)
+    for i, verb_tuple in enumerate(verb_tuples):
+        subject_1 = random.choice(subjects)
+        subject_2 = random.choice(subjects)
 
-    if subject_2 != 'I':
-        subject_2 = str.lower(subject_2)
+        if subject_2 != 'I':
+            subject_2 = str.lower(subject_2)
 
-    verb_1, verb_2 = verb_tuple
-    phrase = '{} {} it, {} {} it.'.format(subject_1, verb_1, subject_2, verb_2)
+        verb_1, verb_2 = verb_tuple
+        phrase = '{} {} it, {} {} it.'.format(subject_1, verb_1, subject_2, verb_2)
 
-    song += phrase + '\n'
+        song += phrase + '\n'
 
-song_lyrics = song[:-1] # get rid of last \n
+    song_lyrics = song[:-1] # get rid of last \n
+    return song_lyrics
 
-def gen_audio(song_id, song_lyrics):
+def gen_lyrics_audio(song_id, song_lyrics):
+    try:
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+        print(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    except:
+        print('Error ==> You must set the env variable GOOGLE_APPLICATION_CREDENTIALS')
+        exit()
+
+    print('Generating audio from Google TTS... ', end='', flush=True)
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.types.SynthesisInput(text=song_lyrics)
 
@@ -70,18 +82,22 @@ def gen_audio(song_id, song_lyrics):
     )
 
     response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    print('done')
 
-    filename = 'phrases/song-{}.mp3'.format(song_id)
+    lyrics_audio = 'out/lyrics-{}.mp3'.format(song_id)
+    lyrics_text = 'out/lyrics-{}.txt'.format(song_id)
 
-    with open(filename, 'wb') as out:
+    with open(lyrics_audio, 'wb') as out:
+        print('Saving lyrics audio to {}... '.format(lyrics_audio), end='', flush=True)
         out.write(response.audio_content)
+        print('done')
 
-    print('Audio content written to file "{}"'.format(filename))
-    return filename
+    with open(lyrics_text, 'w') as f:
+        print('Saving lyrics text to {}... '.format(lyrics_text), end='', flush=True)
+        f.write(song_lyrics)
+        print('done')
 
-song_id = random.randrange(1, 9999999999)
-# lyrics_audio = 'phrases/song-3655327275.mp3'
-lyrics_audio = gen_audio(song_id, song_lyrics)
+    return lyrics_audio
 
 def concat_audio(song_id, lyrics_audio, background_audio):
     fade_dur = 2000
@@ -92,10 +108,14 @@ def concat_audio(song_id, lyrics_audio, background_audio):
     lyrics = AudioSegment.silent(duration=fade_dur) + lyrics
     song = background.overlay(lyrics)
 
-    # background = background[:len(lyrics) + fade_dur * 3]
+    output_song_path = 'out/song-{}.mp3'.format(song_id)
 
-    output_song_path = 'songs/song-{}.mp3'.format(song_id)
+    print('Saving song to ' + output_song_path + '... ', end='', flush=True)
     song.export(output_song_path, format="mp3")
-    print(output_song_path)
+    print('done')
 
+make_output_dirs()
+song_id = random.randrange(1, 9999999999)
+song_lyrics = gen_lyrics_text()
+lyrics_audio = gen_lyrics_audio(song_id, song_lyrics)
 song_path = concat_audio(song_id, lyrics_audio, 'media/7-rings.mp3')
